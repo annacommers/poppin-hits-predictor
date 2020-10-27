@@ -3,10 +3,10 @@ api = TikTokApi()
 
 results = 10
 
-trending = api.trending(count=results)
+trending = api.discoverMusic()
 
 for tiktok in trending:
-    # Prints the text of the tiktok
-    print(tiktok['desc'])
+    # Prints title of the song
+    print(tiktok['cardItem']['title'])
 
 print(len(trending))
