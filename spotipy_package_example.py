@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from spotipy.oauth2 import SpotifyClientCredentials
-from sklearn.linear_model import LinearRegression
-from sklearn.neighbors import NearestNeighbors
+# from sklearn.linear_model import LinearRegression
+# from sklearn.neighbors import NearestNeighbors
 import math
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
@@ -79,22 +79,47 @@ def get_matrix(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHD
     return both_playlists
 
 
-def find_linear_fit(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
+def find_linear_fit(playlist_1='37i9dQZF1DX2L0iB23Enbq',
+                    playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
     """
+    Calculate linear regression of a songs likelyness to
+    be a tiktok song using SVD.
     Args:
-        playlist_1: A Spotify playlist id to analyse how much a song fits with it.
+        playlist_1: A Spotify playlist id to analyse how
+        much a song fits with it.
         playlist_2: A control Spotify playlist id
         song:
     Returns:
         How much the song fits with the given playlist_1.
     """
+
+    # Using SVD we can find the approximate inverse of the given matrix
+    # With this inverse we calculate the approximate weights
+    # to get the best results.
     matrix = get_matrix(playlist_1, playlist_2)
     vector = get_vector(playlist_1, playlist_2)
     transpose = np.transpose(matrix)
-    w = np.divide((transpose*matrix), (transpose*vector))
-    print(w)
-    print(np.shape(w))
-#find_linear_fit()
+    # economy representatation of SVD
+    U, S, V = np.linalg.svd(matrix, full_matrices=False)
+    S = np.multiply(np.identity(len(S)), np.outer(np.ones(len(S)), S))
+    S_inverse = np.linalg.inv(S)
+    U_transpose = np.transpose(U)
+    V_transpose = np.transpose(V)
+    SVD_inverse = np.matmul(V_transpose, np.matmul(S_inverse, U_transpose))
+    weights = np.matmul(SVD_inverse, vector)
+    output = np.matmul(matrix, weights)
+    output_rounded = np.rint(output)
+    
+    # Checks correctness of linear regression
+    print(output_rounded == vector)
+    count_correct = 0
+    for answer in (output_rounded == vector):
+        if answer[0]:
+            count_correct += 1
+    print(count_correct)
+
+    return weights
+find_linear_fit()
 
 
 def pca(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
@@ -108,8 +133,8 @@ def pca(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'
     c = np.amax(vector, axis=0) * mean_centered
     print(np.shape(vector))
     print(np.amax(vector, axis=0))
-    
-pca()
+# pca()
+
 
 def predict_popularity(parameter_vector, songs):
     """
