@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from spotipy.oauth2 import SpotifyClientCredentials
 # from sklearn.linear_model import LinearRegression
-# from sklearn.neighbors import NearestNeighbors
+from sklearn.neighbors import NearestNeighbors
 import math
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
@@ -119,22 +119,54 @@ def find_linear_fit(playlist_1='37i9dQZF1DX2L0iB23Enbq',
     print(count_correct)
 
     return weights
-find_linear_fit()
+#find_linear_fit()
 
+def get_mean_centered_data()
 
-def pca(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
+def pca(playlist_1='37i9dQZF1DX2L0iB23Enbq',
+        playlist_2='37i9dQZEVXbMDoHDwVN2tF',
+        num_principle_vectors=1):
     matrix = get_matrix(playlist_1, playlist_2)
     vector = get_vector(playlist_1, playlist_2)
     transpose = np.transpose(matrix)
     mean_centered = matrix - np.mean(matrix, axis=0)
     A = (1/math.sqrt(np.shape(matrix)[0]-1)) * mean_centered
-    covariance_matrix = A * np.transpose(A)
+    covariance_matrix = np.transpose(A) * A
     value, vector = np.linalg.eig(covariance_matrix)
-    c = np.amax(vector, axis=0) * mean_centered
-    print(np.shape(vector))
-    print(np.amax(vector, axis=0))
-# pca()
+    
+    principle_vectors = np.zeros((num_principle_vectors, vector.shape[0]))
+    for index in range(num_principle_vectors):
+        index_max = np.argmax(value)
+        value[index_max] = -np.inf
+        principle_vectors[index] = np.transpose(vector[:,index_max])
+    compressed = np.matmul(mean_centered, np.transpose(principle_vectors))
+    return (compressed, principle_vectors)
+pca()
 
+def nearest_neighbor(pca_output, testing_data):
+    compressed_data, principle_vectors = pca_output
+    training_data =  
+    testing_data = 
+    compressed_testing_data = np.matmul(testing_data,principle_vectors)
+    neighbors = NearestNeighbors(n_neighbors=1)
+    neighbors.fit(compressed_training_data)
+    neighbors()
+
+def predict_song_category(train_playlist_1='37i9dQZF1DX2L0iB23Enbq',
+                          train_playlist_2='37i9dQZEVXbMDoHDwVN2tF',
+                          test_playlist_1='1tPsUcoJohUBmM2RaSk1WH',
+                          test_playlist_2='6UeSakyzhiEt4NB3UAd6NQ'):
+    pass
+
+
+def plot_eigen_songs(train_playlist_1='37i9dQZF1DX2L0iB23Enbq',
+                     train_playlist_2='37i9dQZEVXbMDoHDwVN2tF',
+                     test_playlist_1='1tPsUcoJohUBmM2RaSk1WH',
+                     test_playlist_2='6UeSakyzhiEt4NB3UAd6NQ'):
+    train_vector = get_vector(train_playlist_1, train_playlist_2)
+    test_vector = get_vector(test_playlist_1, test_playlist_2)
+
+    
 
 def predict_popularity(parameter_vector, songs):
     """
@@ -159,3 +191,15 @@ def song_data():
         A data frame of data for the song.
     """
     pass
+
+
+# def final(playlist1, lable1, playlist2, lable2, num_vectors):
+#     data1 = get(playlist1, lable1)
+#     data2 = get(playlist2, lable2)
+#     pv = get_pv(data1, num_pv)
+#     output1 = compress(data1, pv)
+#     pv = get_pv(data2, num_pv)
+#     output2 = compress(data2, pv)
+#     get_accuracy = nn(output1, output2)
+#     graph(output1, output2)
+
