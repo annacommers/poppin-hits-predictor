@@ -4,6 +4,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from spotipy.oauth2 import SpotifyClientCredentials
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import NearestNeighbors
+import math
 
 spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 
@@ -48,13 +51,21 @@ def get_playlist_data(playlist_id='37i9dQZF1DX2L0iB23Enbq'):
 
 
 def plot_two_playlists(playlist_id_1='37i9dQZF1DX2L0iB23Enbq', playlist_id_2='37i9dQZEVXbMDoHDwVN2tF', quality='danceability'):
-    song_data_frame_1 = playlist_data(playlist_id_1)
-    song_data_frame_2 = playlist_data(playlist_id_2)
+    song_data_frame_1 = get_playlist_data(playlist_id_1)
+    song_data_frame_2 = get_playlist_data(playlist_id_2)
     fig, axs = plt.subplots()
     axs.boxplot([song_data_frame_1[quality], song_data_frame_2[quality]])
     plt.show()
 
-def format_data():
+
+def get_vector(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
+    vector_1 = np.ones((len(get_song_ids(playlist_1)),1))
+    vector_2 = np.zeros((len(get_song_ids(playlist_2)),1))
+    both_vectors = np.append(vector_1, vector_2, axis=0)
+    return both_vectors
+
+
+def get_matrix(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
     """
     
     Args: 
@@ -62,7 +73,11 @@ def format_data():
     Returns:
         matrix: Data in the form for matrix multiplication.
     """
-    pass
+    matrix_1 = get_playlist_data(playlist_1)
+    matrix_2 = get_playlist_data(playlist_2)
+    both_playlists = np.append(matrix_1, matrix_2, axis=0)
+    return both_playlists
+
 
 def find_linear_fit(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
     """
@@ -73,19 +88,28 @@ def find_linear_fit(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXb
     Returns:
         How much the song fits with the given playlist_1.
     """
-    matrix_1 = get_playlist_data(playlist_1)
-    matrix_2 = get_playlist_data(playlist_2)
-    both_playlists = np.append(matrix_1, matrix_2, axis=0)
-    zeros_matrix = np.zeros((np.shape(both_playlists)[0],np.shape(both_playlists)[0] - np.shape(both_playlists)[1]))
-    both_playlists_final = np.append(both_playlists, zeros_matrix, axis=1)
-    vector_1 = np.ones((np.shape(matrix_1)[0],1))
-    vector_2 = np.zeros((np.shape(matrix_2)[0],1))
-    both_vectors = np.append(vector_1, vector_2, axis=0)
-    print(both_playlists_final)
-    print(both_vectors)
-    print(np.shape(both_playlists_final))
-    print(np.linalg.inv(both_playlists_final))
-find_linear_fit()
+    matrix = get_matrix(playlist_1, playlist_2)
+    vector = get_vector(playlist_1, playlist_2)
+    transpose = np.transpose(matrix)
+    w = np.divide((transpose*matrix), (transpose*vector))
+    print(w)
+    print(np.shape(w))
+#find_linear_fit()
+
+
+def pca(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
+    matrix = get_matrix(playlist_1, playlist_2)
+    vector = get_vector(playlist_1, playlist_2)
+    transpose = np.transpose(matrix)
+    mean_centered = matrix - np.mean(matrix, axis=0)
+    A = (1/math.sqrt(np.shape(matrix)[0]-1)) * mean_centered
+    covariance_matrix = A * np.transpose(A)
+    value, vector = np.linalg.eig(covariance_matrix)
+    c = np.amax(vector, axis=0) * mean_centered
+    print(np.shape(vector))
+    print(np.amax(vector, axis=0))
+    
+pca()
 
 def predict_popularity(parameter_vector, songs):
     """
