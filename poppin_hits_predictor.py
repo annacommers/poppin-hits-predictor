@@ -15,8 +15,7 @@ from sklearn.neighbors import NearestNeighbors
 import math
 import helper_functions as helper
 
-
-def get_playlist_data(playlist_id, playlist_label):
+def get_playlist_data(spotify, playlist_id, playlist_label):
     """
     Return numerical playlist data and labels for song type.
 
@@ -34,7 +33,8 @@ def get_playlist_data(playlist_id, playlist_label):
         song_labels: An array of boolean values equal to the playlist_label
         argument, the length of the number of songs in the playlist given.
     """
-    song_ids = helpers.get_song_ids(playlist_id)
+    song_ids = helper.get_song_ids(spotify, playlist_id)
+    song_data = []
     for identification in song_ids:
         data = spotify.audio_features(identification)
         single_song_data = []
@@ -43,11 +43,12 @@ def get_playlist_data(playlist_id, playlist_label):
                 single_song_data.append(data[0][key])
         song_data.append(single_song_data)
     playlist_data = np.matrix(song_data)
+    playlist_data = playlist_data / playlist_data.max(axis=0)
     # if playlist_label:
     #     song_labels = np.ones((1, len(song_ids)), dtype=bool)
     # else:
     #     song_labels = np.zeros((1, len(song_ids)), dtype=bool)
-    song_labels = np.full((1, len(song_ids)), playlist_label)
+    song_labels = np.full(len(song_ids), playlist_label)
     return (playlist_data, song_labels)
 
 
@@ -90,7 +91,7 @@ def pca(data, num_principle_vectors):
     """
     playlist_data, song_labels = data
     mean_centered = playlist_data - np.mean(playlist_data, axis=0)
-    A = (1/math.sqrt(np.shape(matrix)[0]-1)) * mean_centered
+    A = (1/math.sqrt(np.shape(mean_centered)[0]-1)) * mean_centered
     covariance_matrix = np.transpose(A) * A
     value, vector = np.linalg.eig(covariance_matrix)
     principle_vectors = np.zeros((num_principle_vectors, vector.shape[0]))
@@ -102,26 +103,82 @@ def pca(data, num_principle_vectors):
 
 
 def nearest_neighbor(training_data, testing_data):
-    training_song_data, training_song_labels = training_data
-    testing_song_data, testing_song_labels = testing_data
+    """
+    Use a nearest neighbor algorithm to find the predicted 
+    label of a given set of test data.
 
-def graph(trainging_data, testing_data):
-    training_song_data, training_song_labels = training_data
-    testing_song_data, testing_song_labels = testing_data
-    # plot (trainging_song_data "red")
-    # plot (testing_song_data "blue")
+    Args:
+        training_data: Data used from training the nearest neighbor algorithm.
+        testing_data: Data used to test the nearest neighbor algorithm.
+    Returns:
+        The predicted labels of the testing data
+    """
+    principle_vectors = pca(training_data, 2)
+    compressed_training_data, training_song_labels = compress_data(
+        training_data,
+        principle_vectors)
+    compressed_testing_data, testing_song_labels = compress_data(
+        testing_data,
+        principle_vectors)
 
-def calculate_accuracy(testing_results, testing_data):
+    neighbors = NearestNeighbors(n_neighbors=1)
+    neighbors.fit(compressed_training_data)
+    distances, indecies = neighbors.kneighbors(compressed_testing_data)
+
+    testing_results = np.full((testing_song_labels.shape), False)
+    testing_results[indecies]= training_song_labels[indecies]
+    return (testing_results, testing_song_labels)
+
+        
+
+def graph_compressed_data(data):
+    principle_vectors = pca(data, 2)
+    compressed_data, labels = compress_data(data, principle_vectors)
+    plt.plot(compressed_data[labels][:,0],compressed_data[labels][:,1], 'bo', label='TikTok Song')
+    plt.plot(compressed_data[~labels][:,0],compressed_data[~labels][:,1], 'rx', label='Top Chart Song')
+    plt.legend()
+    plt.title("Compressed Song Data [TikTok Songs vs Top Chart Songs]")
+    plt.xlabel("Eigen Vector 1")
+    plt.ylabel("Eigen Vector 2")
+    plt.show()
+    
+
+def calculate_accuracy(testing_results):
     return percent_accurate
 
 
-# ITS THE FINAL FUNCTION
-# def final(playlist1, lable1, playlist2, lable2, num_vectors):
-#     data1 = get(playlist1, lable1)
-#     data2 = get(playlist2, lable2)
-#     pv = get_pv(data1, num_pv)
-#     output1 = compress(data1, pv)
-#     pv = get_pv(data2, num_pv)
-#     output2 = compress(data2, pv)
-#     get_accuracy = nn(output1, output2)
-#     graph(output1, output2)
+def run_algorithm():
+    spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
+
+    playlist_data_1 = get_playlist_data(spotify, '37i9dQZF1DX2L0iB23Enbq', True)
+    # Jazz Songs: 37i9dQZF1DXbITWG1ZJKYt
+    # Top Charts: 37i9dQZEVXbMDoHDwVN2tF
+    playlist_data_2 = get_playlist_data(spotify, '37i9dQZEVXbMDoHDwVN2tF', False)
+    song_data = np.concatenate((playlist_data_1[0], playlist_data_2[0]))
+    label = np.concatenate((playlist_data_1[1], playlist_data_2[1]))
+
+    choice = np.random.choice(range(song_data.shape[0]), size=(int(song_data.shape[0]/2),), replace=False)    
+    sample_1 = np.zeros(song_data.shape[0], dtype=bool)
+    sample_1[choice] = True
+    sample_2 = ~sample_1
+    training_song_data = song_data[sample_1, :]
+    testing_song_data = song_data[sample_2, :]
+    training_label = label[sample_1]
+    testing_label = label[sample_2]
+    training_data = (training_song_data, training_label)
+    testing_data = (testing_song_data, testing_label)
+
+    results = nearest_neighbor(training_data, testing_data)
+    
+    count = results[0].shape[0]
+    correct = 0
+    for index in range(results[0].shape[0]):
+        if results[0][index] == results[1][index]:
+            correct += 1
+
+    print(correct/count)   
+
+    print(pca((song_data[label], label[label]), 1))
+
+    graph_compressed_data((song_data, label))
+run_algorithm()
