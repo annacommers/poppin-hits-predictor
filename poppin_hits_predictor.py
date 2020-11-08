@@ -262,8 +262,8 @@ def run_algorithm(playlist_1='37i9dQZF1DX2L0iB23Enbq',
     graph_compressed_data((song_data, label), "TikTok", "Top Charts")
 
 
-def run_local_algorithm(file_name_1='../data/viral_data.csv',
-                        file_name_2='../data/top_data.csv',
+def run_local_algorithm(file_name_1='./data/viral_data.csv',
+                        file_name_2='./data/top_data.csv',
                         name_1="TikTok",
                         name_2="Top Charts",):
     """
