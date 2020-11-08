@@ -147,13 +147,13 @@ def calculate_accuracy(testing_results):
     return percent_accurate
 
 
-def run_algorithm():
+def run_algorithm(playlist_1='37i9dQZF1DX2L0iB23Enbq', playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
     spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
 
-    playlist_data_1 = get_playlist_data(spotify, '37i9dQZF1DX2L0iB23Enbq', True)
+    playlist_data_1 = get_playlist_data(spotify, playlist_1, True)
     # Jazz Songs: 37i9dQZF1DXbITWG1ZJKYt
     # Top Charts: 37i9dQZEVXbMDoHDwVN2tF
-    playlist_data_2 = get_playlist_data(spotify, '37i9dQZEVXbMDoHDwVN2tF', False)
+    playlist_data_2 = get_playlist_data(spotify, playlist_2, False)
     song_data = np.concatenate((playlist_data_1[0], playlist_data_2[0]))
     label = np.concatenate((playlist_data_1[1], playlist_data_2[1]))
 
@@ -181,4 +181,5 @@ def run_algorithm():
     print(pca((song_data[label], label[label]), 1))
 
     graph_compressed_data((song_data, label))
+    return correct/count
 run_algorithm()
