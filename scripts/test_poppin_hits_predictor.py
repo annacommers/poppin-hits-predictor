@@ -17,8 +17,6 @@ def test_pca():
     matrix = [[1, 2], [3, 4]]
     label = np.array([True, False])
     data = (matrix, np.all(label))
-    print(pca(data, 1))
-    print(np.array([np.sqrt(2)/2, np.sqrt(2)/2]))
     assert np.allclose(pca(data, 1), np.array([np.sqrt(2)/2, np.sqrt(2)/2]))
 
 
@@ -44,7 +42,3 @@ def test_nearest_neighbor():
     assert np.all(nearest_neighbor(data1, data2)[0] == testing_results)
     assert np.all(nearest_neighbor(data1, data2)[1] == labels)
 
-
-# def test_run_algorithm():
-#     playlist_1 = '37i9dQZF1DX2L0iB23Enbq'
-#     assert run_algorithm() == 
