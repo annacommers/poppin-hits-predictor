@@ -174,7 +174,6 @@ def nearest_neighbor(training_data, testing_data):
     neighbors = NearestNeighbors(n_neighbors=1)
     neighbors.fit(compressed_training_data)
     distances, indecies = neighbors.kneighbors(compressed_testing_data)
-    print(indecies)
     testing_results = np.full((testing_song_labels.shape), False)
     testing_results[indecies] = training_song_labels[indecies]
     return (testing_results, testing_song_labels)
