@@ -14,10 +14,12 @@ from poppin_hits_predictor import(
 )
 
 def test_pca():
-    matrix = [[2, 4], [3, 1]]
+    matrix = [[1, 2], [3, 4]]
     label = np.array([True, False])
     data = (matrix, np.all(label))
-    assert pca(data, 1) == np.all([4, 3])
+    print(pca(data, 1))
+    print(np.array([np.sqrt(2)/2, np.sqrt(2)/2]))
+    assert np.allclose(pca(data, 1), np.array([np.sqrt(2)/2, np.sqrt(2)/2]))
 
 
 def test_compress_data():
@@ -35,11 +37,12 @@ def test_nearest_neighbor():
     #accuracy
     matrix = [[2, 4], [3, 1]]
     labels = np.array([True, False])
-    data1 = (matrix, np.all(labels))
-    data2 = (matrix, np.all(labels))
-    testing_results = np.array([True, True])
+    data1 = (matrix, labels)
+    data2 = (matrix, labels)
+    testing_results = np.array([True, False])
     #testing_results = np.full((test_song_labels.shape), True)
-    assert nearest_neighbor(data1, data2) == (np.all(testing_results), labels)
+    assert np.all(nearest_neighbor(data1, data2)[0] == testing_results)
+    assert np.all(nearest_neighbor(data1, data2)[1] == labels)
 
 
 # def test_run_algorithm():
