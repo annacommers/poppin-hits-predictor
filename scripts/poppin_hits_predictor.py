@@ -142,7 +142,7 @@ def pca(data, num_principle_vectors):
     """
     playlist_data, song_labels = data
     mean_centered = playlist_data - np.mean(playlist_data, axis=0)
-    A = (1 / math.sqrt(np.shape(mean_centered)[0] - 1)) * mean_centered
+    A = (1 / math.sqrt(np.shape(mean_centered)[0])) * mean_centered
     covariance_matrix = np.matmul(np.transpose(A), A)
     value, vector = np.linalg.eig(covariance_matrix)
     principle_vectors = np.zeros((num_principle_vectors, vector.shape[0]))
@@ -171,11 +171,10 @@ def nearest_neighbor(training_data, testing_data):
     compressed_testing_data, testing_song_labels = compress_data(
         testing_data,
         principle_vectors)
-
     neighbors = NearestNeighbors(n_neighbors=1)
     neighbors.fit(compressed_training_data)
     distances, indecies = neighbors.kneighbors(compressed_testing_data)
-
+    print(indecies)
     testing_results = np.full((testing_song_labels.shape), False)
     testing_results[indecies] = training_song_labels[indecies]
     return (testing_results, testing_song_labels)
@@ -265,7 +264,9 @@ def run_algorithm(playlist_1='37i9dQZF1DX2L0iB23Enbq',
 
 
 def run_local_algorithm(file_name_1='../data/viral_data.csv',
-                        file_name_2='../data/top_data.csv'):
+                        file_name_2='../data/top_data.csv',
+                        name_1="TikTok",
+                        name_2="Top Charts",):
     """
     Gather data on two spotify playlists and compare their similarity.
     Graph outputs.
@@ -278,10 +279,6 @@ def run_local_algorithm(file_name_1='../data/viral_data.csv',
     """
     playlist_data_1 = get_local_playlist_data(file_name_1, True)
     playlist_data_2 = get_local_playlist_data(file_name_2, False)
-    print(playlist_data_1[0].shape)
-    print(playlist_data_2[0].shape)
-    print(playlist_data_1[1].shape)
-    print(playlist_data_2[1].shape)
     song_data = np.concatenate((playlist_data_1[0], playlist_data_2[0]))
     label = np.concatenate((playlist_data_1[1], playlist_data_2[1]))
     choice = np.random.choice(range(song_data.shape[0]),
@@ -301,5 +298,3 @@ def run_local_algorithm(file_name_1='../data/viral_data.csv',
     print(calculate_accuracy(results))
     print(pca((song_data[label], label[label]), 1))
     graph_compressed_data((song_data, label))
-
-# run_local_algorithm()
