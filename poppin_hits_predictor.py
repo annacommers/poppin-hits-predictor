@@ -51,26 +51,27 @@ def get_playlist_data(spotify, playlist_id, playlist_label):
     return (playlist_data, song_labels)
 
 
-def save_playlist_data(file_name, spotify,
+def save_playlist_data(file_name,
                        playlist_id='37i9dQZF1DX2L0iB23Enbq'):
     """
     Create a CSV with the playlist data collected from spotify.
 
     Args:
         file_name: The name of the CSV file to save the data to.
-        spotify: The spotipy object used to access the
-            spotify API loaded with credentials.
+            This excludes the file type.
         playlist_id: The playlist ID which the spotify
             API will pull data from.
     Returns:
         None. Saves all data collected in a CSV of name file_name
     """
+    spotify = spotipy.Spotify(
+        client_credentials_manager=SpotifyClientCredentials())
     song_ids = helper.get_song_ids(spotify, playlist_id)
     song_data = []
     for id in song_ids:
         song_data += (spotify.audio_features(id))
     results = pd.DataFrame(song_data)
-    results.to_csv(f"../data/{file_name}.csv")
+    results.to_csv(f"./data/{file_name}.csv")
 
 
 def get_local_playlist_data(file_name, playlist_label):
@@ -224,7 +225,9 @@ def calculate_accuracy(results):
 
 
 def run_algorithm(playlist_1='37i9dQZF1DX2L0iB23Enbq',
-                  playlist_2='37i9dQZEVXbMDoHDwVN2tF'):
+                  playlist_2='37i9dQZEVXbMDoHDwVN2tF',
+                  name_1="TikTok",
+                  name_2="Top Charts"):
     """
     Gather data on two spotify playlists and compare their similarity.
     Graph outputs.
@@ -259,13 +262,13 @@ def run_algorithm(playlist_1='37i9dQZF1DX2L0iB23Enbq',
 
     print(calculate_accuracy(results))
     print(pca((song_data[label], label[label]), 1))
-    graph_compressed_data((song_data, label), "TikTok", "Top Charts")
+    graph_compressed_data((song_data, label), name_1, name_2)
 
 
 def run_local_algorithm(file_name_1='../data/viral_data.csv',
                         file_name_2='../data/top_data.csv',
                         name_1="TikTok",
-                        name_2="Top Charts",):
+                        name_2="Top Charts"):
     """
     Gather data on two spotify playlists and compare their similarity.
     Graph outputs.
