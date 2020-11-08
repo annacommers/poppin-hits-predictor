@@ -296,4 +296,4 @@ def run_local_algorithm(file_name_1='./data/viral_data.csv',
 
     print(calculate_accuracy(results))
     print(pca((song_data[label], label[label]), 1))
-    graph_compressed_data((song_data, label))
+    graph_compressed_data((song_data, label), name_1, name_2)
